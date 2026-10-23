@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14532d"><title>HOPE FOUNDATION</title>
+<style>
+:root{--g:#14532d;--g2:#166534;--bg:#f4f7f4;--line:#d8e2d9;--text:#18251b;--muted:#647067}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--g);color:#fff;padding:18px 15px}header h1{margin:0;font-size:21px}header p{margin:4px 0 0;color:#dcfce7;font-size:13px}
+main{padding:13px;max-width:1100px;margin:auto}.hidden{display:none!important}
+button{font:inherit;border:0;border-radius:10px;padding:11px 14px;cursor:pointer}.primary{background:var(--g2);color:#fff;font-weight:650}.secondary{background:#e3eee4;color:#174426}.danger{background:#fee2e2;color:#991b1b}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+h2{font-size:18px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px}.register-list{display:grid;grid-template-columns:1fr;gap:9px}
+.reg{display:flex;align-items:center;gap:12px;background:white;border:1px solid var(--line);border-radius:12px;padding:13px;text-align:left;width:100%;color:var(--text)}
+.regicon{width:42px;height:42px;border-radius:10px;background:#e7f2e8;color:var(--g);display:grid;place-items:center;font-weight:800}.regtext{flex:1}.regtext strong{display:block}.regtext small{display:block;color:var(--muted);margin-top:3px}.chev{font-size:22px;color:var(--muted)}
+.sheet-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:white;max-height:68vh}
+table{border-collapse:separate;border-spacing:0;white-space:nowrap;min-width:100%}
+th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;text-align:center;height:42px}
+th{background:#e6f0e7;color:#173e23;position:sticky;top:0;z-index:2;font-weight:700}
+th:first-child,td:first-child{position:sticky;left:0;z-index:3;background:#f1f6f1;min-width:48px;width:48px}
+th:nth-child(2),td:nth-child(2){position:sticky;left:48px;z-index:3;background:white;min-width:150px;width:150px}
+th:nth-child(2){background:#e6f0e7;z-index:4}
+th.month,td.amt{min-width:90px;width:90px}
+td input{width:100%;height:41px;border:0;background:transparent;padding:7px 8px;font:inherit;outline-offset:-2px}
+td input:focus{outline:2px solid #26934b;background:#f2fff4}td input.amount{text-align:right}
+.total td{background:#d9eddd!important;font-weight:750;position:sticky;bottom:0;z-index:2}.total td:first-child,.total td:nth-child(2){z-index:4}
+.note{font-size:12px;line-height:1.5;color:var(--muted);margin:12px 2px}label{display:block;font-weight:650;margin:12px 0 5px}input[type=text],input[type=file]{width:100%;font:inherit;padding:11px;border:1px solid #cbd5cc;border-radius:9px;background:white}
+#status{font-size:12px;color:var(--g2);min-height:18px;margin-top:8px}
+@media(min-width:600px){.register-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><h1>HOPE FOUNDATION</h1><p id="subtitle">Donation Register</p></header>
+<main>
+<section id="home">
+ <div class="card">
+  <h2>Registers / Register Numbers</h2>
+  <p class="muted">Register number par tap karein aur uski donor list kholein.</p>
+  <div class="toolbar">
+   <label style="flex:1;margin:0">Year
+    <select id="yearSelect" style="display:block;width:100%;font:inherit;padding:10px;border:1px solid #cbd5cc;border-radius:9px;background:white"></select>
+   </label>
+   <button class="primary" id="newYearBtn">+ New Year</button>
+  </div>
+  <div class="toolbar"><button class="secondary" id="copyYearBtn">Copy Previous Register</button><button class="secondary" id="blankYearBtn">Blank Register</button></div>
+  <div id="registerList" class="register-list"></div><div class="toolbar"><button class="primary" id="moreRegistersBtn">+ Show 10 More Registers</button></div>
+ </div>
+ <div class="card">
+  <h2>Backup</h2>
+  <div class="toolbar"><button class="secondary" id="exportBtn">Export Backup</button><button class="secondary" id="importTrigger">Import Backup</button><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+  <p class="muted">Backup file ko safe jagah rakhein. Data isi device/browser mein save hota hai.</p><div id="homeStatus" class="muted"></div>
+ </div>
+</section>
+<section id="registerPage" class="hidden">
+ <div class="toolbar"><button class="secondary" id="backBtn">← All Registers</button><button class="secondary" id="exportRegisterBtn">Export Backup</button></div>
+ <div class="card">
+  <h2 id="registerTitle">Register No. 001</h2>
+  <p class="muted">S.No. · Donor Name · January–December</p>
+  <div class="toolbar"><button class="primary" id="addRowsBtn">+ Show 5 More Donors</button><button class="secondary" id="addDonorBtn">+ Add Donor</button></div>
+  <div class="sheet-wrap"><table><thead><tr id="headRow"><th>S.No.</th><th>Donor Name</th></tr></thead><tbody id="rowsBody"></tbody></table></div>
+  <div id="status" role="status"></div>
+  <p class="note">Amounts automatically save on this device. Green total row monthly totals calculate automatically.</p>
+ </div>
+</section>
+</main>
+<script>
+const KEY='hope_foundation_two_page_register_v1',MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'],MAXREG=100,MAXDONORS=100;
+const currentYear=new Date().getFullYear();
+const VISIBLE_REGISTERS=10;
+let app=load(),selected=null,visible=30,visibleRegisters=10;
+function emptyReg(){return {donors:Array.from({length:MAXDONORS},(_,i)=>({name:'',amounts:Array(12).fill('')})),visible:30}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.years)return x}catch(e){}return {activeYear:currentYear,years:{[currentYear]:{}}}}
+function ensureYear(y){if(!app.years[y])app.years[y]={};for(let i=1;i<=MAXREG;i++){const k=regKey(i);if(!app.years[y][k])app.years[y][k]=emptyReg();normalizeReg(app.years[y][k])}}
+function regKey(n){return 'R-'+String(n).padStart(3,'0')}
+function normalizeReg(r){r.donors=Array.from({length:MAXDONORS},(_,i)=>{const d=r.donors?.[i]||{};return{name:String(d.name||''),amounts:Array.from({length:12},(_,j)=>d.amounts?.[j]==null?'':String(d.amounts[j]))}});r.visible=Math.min(MAXDONORS,Math.max(30,Number(r.visible)||30))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(app));return true}catch(e){say('Storage unavailable/full. Please export backup.');return false}}
+function say(s){const el=document.getElementById('status');if(el)el.textContent=s;homeStatus.textContent=s}
+function money(n){return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(n)}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function getReg(){return app.years[selected.year][selected.key]}
+function yearNumbers(){return Object.keys(app.years).map(Number).sort((a,b)=>b-a)}
+function renderHome(){
+ const ys=yearNumbers();if(!ys.length)ys.push(currentYear);
+ yearSelect.innerHTML=ys.map(y=>`<option value="${y}">${y}</option>`).join('');yearSelect.value=String(app.activeYear);
+ registerList.innerHTML='';
+ for(let i=1;i<=Math.min(MAXREG,visibleRegisters);i++){const key=regKey(i),r=app.years[app.activeYear]?.[key]||emptyReg(),filled=r.donors.filter(d=>d.name.trim()).length;
+  const b=document.createElement('button');b.className='reg';b.innerHTML=`<span class="regicon">#${String(i).padStart(3,'0')}</span><span class="regtext"><strong>Register No. ${String(i).padStart(3,'0')}</strong><small>${filled} donor${filled===1?'':'s'}</small></span><span class="chev">›</span>`;
+  b.addEventListener('click',()=>openRegister(app.activeYear,key));registerList.appendChild(b);
+ }
+ moreRegistersBtn.disabled=visibleRegisters>=MAXREG;moreRegistersBtn.textContent=visibleRegisters>=MAXREG?'All 100 registers shown':'+ Show 10 More Registers';
+}
+function openRegister(year,key){ensureYear(year);selected={year,key};visible=app.years[year][key].visible;home.classList.add('hidden');registerPage.classList.remove('hidden');registerTitle.textContent=`${key.replace('R-','Register No. ')} · ${year}`;subtitle.textContent='Donor Monthly Donation';renderSheet();window.scrollTo(0,0)}
+function closeRegister(){registerPage.classList.add('hidden');home.classList.remove('hidden');subtitle.textContent='Donation Register';renderHome();window.scrollTo(0,0)}
+function renderSheet(){
+ const head=headRow;head.innerHTML='<th>S.No.</th><th>Donor Name</th>'+MONTHS.map(m=>`<th class="month">${m}</th>`).join('');
+ const r=getReg();visible=r.visible;rowsBody.innerHTML='';
+ for(let i=0;i<visible;i++){
+  const d=r.donors[i],tr=document.createElement('tr');const sn=document.createElement('td');sn.textContent=i+1;tr.appendChild(sn);
+  const nc=document.createElement('td'),ni=document.createElement('input');ni.type='text';ni.maxLength=100;ni.placeholder='Donor name';ni.value=d.name;ni.setAttribute('aria-label','Donor name '+(i+1));ni.addEventListener('input',()=>{d.name=ni.value;save();});nc.appendChild(ni);tr.appendChild(nc);
+  for(let j=0;j<12;j++){const td=document.createElement('td');td.className='amt';const inp=document.createElement('input');inp.className='amount';inp.type='number';inp.min='0';inp.step='0.01';inp.inputMode='decimal';inp.placeholder='0';inp.value=d.amounts[j];inp.setAttribute('aria-label',MONTHS[j]+' amount');inp.addEventListener('input',()=>{if(Number(inp.value)<0)inp.value='';d.amounts[j]=inp.value;save();updateTotals();});td.appendChild(inp);tr.appendChild(td)}
+  rowsBody.appendChild(tr);
+ }
+ const total=document.createElement('tr');total.className='total';total.innerHTML='<td>Σ</td><td>MONTHLY TOTAL</td>'+MONTHS.map((_,j)=>`<td id="tot${j}">${money(0)}</td>`).join('');rowsBody.appendChild(total);updateTotals();
+ addRowsBtn.disabled=visible>=MAXDONORS;addRowsBtn.textContent=visible>=MAXDONORS?'All 100 donors shown':'+ Show 5 More Donors';
+}
+function updateTotals(){if(!selected)return;const r=getReg();for(let j=0;j<12;j++){const total=r.donors.reduce((s,d)=>s+(Number(d.amounts[j])||0),0),el=document.getElementById('tot'+j);if(el)el.textContent=money(total)}}
+addRowsBtn.addEventListener('click',()=>{const r=getReg();r.visible=Math.min(MAXDONORS,r.visible+5);visible=r.visible;save();renderSheet()});
+addDonorBtn.addEventListener('click',()=>{const r=getReg();const idx=r.donors.findIndex(d=>!d.name.trim());if(idx<0){say('100 donors already used in this register.');return}if(idx>=r.visible){r.visible=Math.min(MAXDONORS,Math.ceil((idx+1)/5)*5);if(r.visible<30)r.visible=30;visible=r.visible;save();renderSheet()}const inputs=rowsBody.querySelectorAll('tr:not(.total) td:nth-child(2) input');inputs[idx]?.focus();say('Enter donor name in the next blank row.')});
+backBtn.addEventListener('click',closeRegister);
+yearSelect.addEventListener('change',()=>{app.activeYear=Number(yearSelect.value);ensureYear(app.activeYear);save();renderHome()});
+function createYear(mode){const y=Number(prompt('Enter new year (e.g. '+(app.activeYear+1)+')',String(app.activeYear+1)));if(!Number.isInteger(y)||y<2000||y>2200){if(y)alert('Please enter a valid year.');return}if(app.years[y]&&!confirm('This year already exists. Replace all its registers?'))return;app.years[y]={};for(let i=1;i<=MAXREG;i++){const key=regKey(i);if(mode==='copy'&&app.years[app.activeYear]?.[key]){const old=app.years[app.activeYear][key];app.years[y][key]={donors:old.donors.map(d=>({name:d.name,amounts:Array(12).fill('')})),visible:old.visible}}else app.years[y][key]=emptyReg()}app.activeYear=y;save();renderHome();say(mode==='copy'?'New year created; donor names copied, amounts blank.':'New blank year created.')}
+moreRegistersBtn.addEventListener('click',()=>{visibleRegisters=Math.min(MAXREG,visibleRegisters+10);renderHome()});
+newYearBtn.addEventListener('click',()=>{const choice=prompt('Type COPY to copy donor names from current year, or BLANK for an empty register.','COPY');if(!choice)return;const mode=choice.trim().toLowerCase();if(mode==='copy')createYear('copy');else if(mode==='blank')createYear('blank');else alert('Please type COPY or BLANK.')});
+copyYearBtn.addEventListener('click',()=>createYear('copy'));blankYearBtn.addEventListener('click',()=>createYear('blank'));
+function exportBackup(){const blob=new Blob([JSON.stringify({app:'HOPE FOUNDATION',version:2,exportedAt:new Date().toISOString(),payload:app},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='hope-foundation-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);say('Backup download started. Check Downloads.')}
+exportBtn.addEventListener('click',exportBackup);exportRegisterBtn.addEventListener('click',exportBackup);importTrigger.addEventListener('click',()=>importFile.click());
+importFile.addEventListener('change',async()=>{const f=importFile.files[0];if(!f)return;try{const x=JSON.parse(await f.text()),p=x.payload||x;if(!p.years)throw Error('bad');if(!confirm('Restore backup? Current data will be replaced. Export current data first if needed.'))return;app=p;for(const y of Object.keys(app.years))ensureYear(Number(y));save();renderHome();closeRegister();say('Backup restored.')}catch(e){say('Invalid HOPE FOUNDATION backup file.')}importFile.value=''});
+ensureYear(app.activeYear);save();renderHome();
+</script>
+</body></html>
