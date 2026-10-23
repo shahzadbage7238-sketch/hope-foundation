@@ -1,0 +1,112 @@
+
+name: Build HOPE FOUNDATION APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download project files
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Android project
+        run: |
+          mkdir -p app/src/main/assets
+          mkdir -p app/src/main/java/org/hopefoundation/register
+
+          if [ -f index.html ]; then
+            cp index.html app/src/main/assets/index.html
+          else
+            echo "ERROR: index.html missing"
+            exit 1
+          fi
+
+          if [ -f AndroidManifest.xml ]; then
+            cp AndroidManifest.xml app/src/main/AndroidManifest.xml
+          else
+            echo "ERROR: AndroidManifest.xml missing"
+            exit 1
+          fi
+
+          if [ -f MainActivity.java ]; then
+            cp MainActivity.java app/src/main/java/org/hopefoundation/register/MainActivity.java
+          else
+            echo "ERROR: MainActivity.java missing"
+            exit 1
+          fi
+
+          cat > settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "HOPEFoundation"
+          include(":app")
+          EOF
+
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+          cat > gradle.properties <<'EOF'
+          android.useAndroidX=true
+          org.gradle.jvmargs=-Xmx2048m
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+          android {
+              namespace 'org.hopefoundation.register'
+              compileSdk 35
+              defaultConfig {
+                  applicationId 'org.hopefoundation.register'
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 1
+                  versionName '1.0'
+              }
+          }
+          EOF
+
+      - name: Install Android build tools
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: HOPE-FOUNDATION-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
